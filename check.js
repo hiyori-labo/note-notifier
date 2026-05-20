@@ -17,7 +17,7 @@ const fs = require('fs');
         : [];
 
       for (const item of newItems.reverse()) {
-        await fetch(process.env.DISCORD_WEBHOOK, {
+        const res = await fetch(process.env.DISCORD_WEBHOOK, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -31,6 +31,11 @@ const fs = require('fs');
             }],
           }),
         });
+        // Discord が弾いても fetch は例外を投げないので明示的に確認する。
+        // 失敗時は throw → catch でログ＆ stateを更新しない → 次回再送される。
+        if (!res.ok) {
+          throw new Error(`Discord ${res.status}: ${(await res.text()).slice(0, 200)}`);
+        }
       }
       if (feed.items[0]) state[user] = feed.items[0].pubDate;
     } catch (e) {
