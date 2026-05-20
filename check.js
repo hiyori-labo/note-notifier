@@ -17,6 +17,8 @@ const fs = require('fs');
         : [];
 
       for (const item of newItems.reverse()) {
+        // Discord の timestamp は ISO8601 必須。RSS の pubDate は RFC2822 形式なので変換する。
+        const ts = new Date(item.pubDate);
         const res = await fetch(process.env.DISCORD_WEBHOOK, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -26,7 +28,7 @@ const fs = require('fs');
               url: item.link,
               author: { name: `${user} が新しい記事を公開しました` },
               description: item.contentSnippet?.slice(0, 200),
-              timestamp: item.pubDate,
+              timestamp: isNaN(ts) ? undefined : ts.toISOString(),
               color: 0x41C9B4,
             }],
           }),
